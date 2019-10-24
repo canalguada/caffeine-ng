@@ -54,6 +54,12 @@ class BaseInhibitor:
     def __str__(self):
         return self.__class__.__name__
 
+    def inhibit(self):
+        raise NotImplementedError()
+
+    def uninhibit(self):
+        raise NotImplementedError()
+
 
 class GnomeInhibitor(BaseInhibitor):
 
@@ -117,6 +123,42 @@ class XdgScreenSaverInhibitor(BaseInhibitor):
     @property
     def applicable(self):
         return 'org.freedesktop.ScreenSaver' in self.bus.list_names()
+
+
+class XfceScreenSaverInhibitor(BaseInhibitor):
+
+    def __init__(self):
+        BaseInhibitor.__init__(self)
+        self.bus = dbus.SessionBus()
+
+        self.__proxy = None
+        self.__cookie = None
+
+    def inhibit(self):
+        if not self.__proxy:
+            self.__proxy = \
+                self.bus.get_object('org.xfce.ScreenSaver',
+                                    '/org/xfce/ScreenSaver')
+            self.__proxy = dbus.Interface(
+                self.__proxy,
+                dbus_interface='org.xfce.ScreenSaver'
+            )
+        self.__cookie = \
+            self.__proxy.Inhibit("Caffeine", INHIBITION_REASON)
+
+        self.running = True
+
+    def uninhibit(self):
+        if self.__cookie:
+            self.__proxy.UnInhibit(self.__cookie)
+        self.running = False
+
+    def is_screen_inhibitor(self):
+        return True
+
+    @property
+    def applicable(self):
+        return 'org.xfce.ScreenSaver' in self.bus.list_names()
 
 
 class XdgPowerManagmentInhibitor(BaseInhibitor):
