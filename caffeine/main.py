@@ -46,7 +46,7 @@ from docopt import docopt
 from gi.repository import GdkPixbuf, Gio, GObject, Gtk
 from gi.repository.Notify import init as notify_init
 from gi.repository.Notify import Notification
-# from setproctitle import setproctitle
+from setproctitle import setproctitle
 
 from . import __version__
 from .applicationinstance import ApplicationInstance
@@ -407,10 +407,10 @@ class GUI:
         Gtk.main_quit()
 
 
-def setproctitle(title):
-    """Set process title."""
-    title_bytes = title.encode(sys.getdefaultencoding(), 'replace')
-    buf = ctypes.create_string_buffer(title_bytes)
+def setprocname(name):
+    """Set process name."""
+    name_bytes = name.encode(sys.getdefaultencoding(), 'replace')
+    buf = ctypes.create_string_buffer(name_bytes)
     if 'linux' in sys.platform:
         try:
             libc = ctypes.cdll.LoadLibrary("libc.so.6")
@@ -432,15 +432,11 @@ def setproctitle(title):
 
 
 def main():
-    # setproctitle("caffeine-ng")
     setproctitle("caffeine")
+    setprocname("caffeine")
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     GObject.threads_init()
-
-    # # register the process id as 'caffeine'
-    # libc = ctypes.cdll.LoadLibrary('libc.so.6')
-    # libc.prctl(15, 'caffeine', 0, 0, 0)
 
     arguments = docopt(__doc__, version=__version__)
 
